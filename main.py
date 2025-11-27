@@ -29,14 +29,14 @@ for i, col in enumerate(df_origin.columns):
 # print(df.sample(10))
 
 # очищення данних
-# df_origin["email"] = df_origin["email"].str.lower()
-# df_origin["web"] = df_origin["web"].str.lower()
-# # print(df.email)
-# df_origin["phone1"] = df_origin["phone1"].str.strip()
-# df_origin["phone2"] = df_origin["phone2"].str.strip()
-# # print(df.phone1)
-# print(df.phone2)
-# print(df.sample(10))
+df_origin["email"] = df_origin["email"].str.lower()
+df_origin["web"] = df_origin["web"].str.lower()
+# print(df.email)
+df_origin["phone1"] = df_origin["phone1"].str.strip()
+df_origin["phone2"] = df_origin["phone2"].str.strip()
+# print(df.phone1)
+print(df.phone2)
+print(df.sample(10))
 
 df = df_origin.copy()
 if COLUMNS_TO_DROP:
@@ -60,11 +60,11 @@ possible_web_cols = [c for c in df.columns if ("web" in c.lower()) or ("website"
 possible_phone_cols = [c for c in df.columns if ("phone" in c.lower()) or ("telephone" in c.lower()) or ("tel" in c.lower())]
 possible_fax_cols = [c for c in df.columns if "fax" in c.lower()]
 
-print("\nPossible columns")
-print("Email col", possible_email_cols)
-print("Phone col", possible_phone_cols)
-print("Fax col", possible_fax_cols)
-print("Web col", possible_web_cols)
+# print("\nPossible columns")
+# print("Email col", possible_email_cols)
+# print("Phone col", possible_phone_cols)
+# print("Fax col", possible_fax_cols)
+# print("Web col", possible_web_cols)
 
 for col in df.select_dtypes(include=["object"]).columns:
     df[col] = df[col].apply(standartize_text)
@@ -114,5 +114,63 @@ if name_title:
 else:
     print("no name")
 
-print(df.sample(10))
+#створення нових колонок
 
+df["full_name"] = df.first_name + " " + df.last_name
+
+df["domain"] = [c.split("@")[-1] for c in df.email]
+
+# df["is_gmail"] = [True if "@gmail.com" in str(s).lower() else False for s in df["email"]]
+df["is_gmail"] = [True if str(s).endswith("@gmail.com") else False for s in df["email"]]
+
+# print(df.sample(10))
+
+gmail_users = df.loc[df["is_gmail"] == True].copy()
+# print("Gmail users", len(gmail_users))
+
+# df["company_name"]
+# def company_col():
+df["company_name"] = df["company_name"].fillna("")
+
+mask_LLC_Ltd = df.company_name.str.contains(r"\b(LLC|Ltd|llc|LTD|ltd)\b", regex=True, na=False)
+company_LLC_Ltd = df.loc[mask_LLC_Ltd].copy()
+# print(company_LLC_Ltd)
+# print("companys LLC, Ltd", len(company_LLC_Ltd))
+
+#позиційна вибірка
+
+try:
+    first_10_raw_2_col = df.iloc[:10, 2:6]
+    # print(first_10_raw_2_col)
+except Exception as e:
+    print("не можна Перші 10 рядків + колонки", e)
+
+every_10th = df.iloc[::10, :].copy()
+# print(every_10th)
+
+random_5 = df.sample(5, random_state=42)
+# print(random_5)
+
+#групування та статистика
+
+print((df["email"].str.split("@").str[-1]).value_counts().head(5))
+# print(df["city"].value_counts().head(10))
+
+# agg_by_city = df.groupby("city").agg(
+#     people_count = ("city", "size"),
+#     avg_people = ("first_name", "mean")
+# )   #.sort_values(people_count).head(10)
+
+# print(agg_by_city)
+
+
+agg_by_city = df.groupby("city").agg(
+    people_count =("first_name", "count"),
+    uniq_domen = ("domain", "nunique")
+).sort_values("people_count", ascending=False).head(10)
+print(agg_by_city)
+
+city = df.groupby("city")["first_name"].nunique()
+count_by_city = df.groupby('city').size().reset_index(name='count')
+print(city)
+print(count_by_city)
