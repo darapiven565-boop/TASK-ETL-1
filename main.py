@@ -35,8 +35,8 @@ df_origin["web"] = df_origin["web"].str.lower()
 df_origin["phone1"] = df_origin["phone1"].str.strip()
 df_origin["phone2"] = df_origin["phone2"].str.strip()
 # print(df.phone1)
-print(df.phone2)
-print(df.sample(10))
+print(df_origin.phone2)
+print(df_origin.sample(10))
 
 df = df_origin.copy()
 if COLUMNS_TO_DROP:
@@ -174,3 +174,6 @@ city = df.groupby("city")["first_name"].nunique()
 count_by_city = df.groupby('city').size().reset_index(name='count')
 print(city)
 print(count_by_city)
+
+df.to_csv("data/result.csv", encoding="utf-8")
+df.to_excel("data/result.xlsx")
