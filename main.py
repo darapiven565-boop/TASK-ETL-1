@@ -153,7 +153,7 @@ random_5 = df.sample(5, random_state=42)
 
 #групування та статистика
 
-print((df["email"].str.split("@").str[-1]).value_counts().head(5))
+top_domain = pd.DataFrame(df["email"].str.split("@").str[-1].value_counts().head(5))
 # print(df["city"].value_counts().head(10))
 
 # agg_by_city = df.groupby("city").agg(
@@ -171,9 +171,18 @@ agg_by_city = df.groupby("city").agg(
 print(agg_by_city)
 
 city = df.groupby("city")["first_name"].nunique()
-count_by_city = df.groupby('city').size().reset_index(name='count')
+count_by_city = df.groupby('city').size().reset_index(name='count').sort_values("count", ascending=False)
 print(city)
 print(count_by_city)
 
-df.to_csv("data/result.csv", encoding="utf-8")
-df.to_excel("data/result.xlsx")
+# Збереження данних
+
+df.to_csv("data/uk500_clean.csv", encoding="utf-8")
+gmail_users.to_csv("data/gmail_users.csv", encoding="utf-8")
+
+file_name = 'stats.xlsx'
+
+with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
+    top_domain.to_excel(writer, sheet_name='domens', index=False)
+    count_by_city.head(2).to_excel(writer, sheet_name='Cities', index=False)
+
